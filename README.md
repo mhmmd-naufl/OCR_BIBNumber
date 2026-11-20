@@ -1,44 +1,44 @@
-# OCR BIB Number Detection & Tracking
+# OCR BIB Number — Deteksi & Pembacaan Nomor BIB Peserta Lomba
 
-A real-time pipeline that detects people in race footage, locates their bib (race number), reads the number via OCR, and logs every result to CSV.
+Pipeline real-time yang mendeteksi peserta dalam video perlombaan, menemukan nomor BIB mereka, membaca nomornya lewat OCR, dan mencatat setiap hasil ke CSV.
 
-## How it works
+## Cara Kerja
 
 ```
-Video frame
-  → YOLOv8 person detection
+Frame video
+  → Deteksi orang dengan YOLOv8
   → ByteTrack (Kalman filter + Hungarian algorithm)
-  → Chest-region crop → Canny + contour bib localization
-  → Preprocessing (4× upscale · denoise · CLAHE · sharpen · adaptive threshold)
+  → Crop area dada → Canny + contour untuk temukan BIB
+  → Preprocessing (upscale 4× · denoise · CLAHE · sharpen · adaptive threshold)
   → Ensemble OCR  (EasyOCR + Tesseract)
   → Weighted temporal voting per track
-  → CSV log  (12 columns including real OCR confidence)
+  → CSV log  (12 kolom termasuk real OCR confidence)
 ```
 
-## Features
+## Fitur
 
-- **ByteTrack** — Kalman-filter prediction and optimal Hungarian assignment keep IDs stable across occlusions and fast movement
-- **Ensemble OCR** — EasyOCR (primary) and Tesseract (fallback) with confidence-weighted voting; real per-read confidence propagated to CSV
-- **Weighted temporal aggregation** — reads with higher OCR confidence carry more weight in the per-track vote buffer
-- **Structured CSV logging** — 12 columns: frame index, timestamp, track ID, bib number, bounding box, bbox confidence, OCR confidence, occlusion flag, capture flag
-- **Post-run analysis** — `analyze_csv.py` produces per-track breakdowns, capture summaries, and filtered exports
-- **Performance controls** — independent skip-frame settings for YOLO detection, OCR, and NlMeans denoising; display scaling; lazy model loading
+- **ByteTrack** — prediksi posisi lewat Kalman filter dan assignment optimal lewat Hungarian algorithm, ID tetap stabil saat oklusi dan gerakan cepat
+- **Ensemble OCR** — EasyOCR (utama) dan Tesseract (fallback) dengan voting berbasis confidence; confidence asli per-read diteruskan ke CSV
+- **Weighted temporal aggregation** — read dengan OCR confidence lebih tinggi punya bobot lebih besar dalam buffer voting per track
+- **CSV logging terstruktur** — 12 kolom: frame index, timestamp, track ID, nomor BIB, bounding box, bbox confidence, OCR confidence, occlusion flag, capture flag
+- **Analisis post-run** — `analyze_csv.py` menghasilkan breakdown per track, ringkasan capture, dan export terfilter
+- **Kontrol performa** — pengaturan skip-frame terpisah untuk deteksi YOLO, OCR, dan NlMeans denoising; display scaling; lazy model loading
 
-## Stack
+## Tech Stack
 
-| Component | Library |
+| Komponen | Library |
 |---|---|
-| Person detection | YOLOv8n (`ultralytics`) |
+| Deteksi orang | YOLOv8n (`ultralytics`) |
 | Tracking | ByteTrack via `ultralytics.trackers` |
-| Image processing | OpenCV (`opencv-contrib-python`) |
-| OCR — primary | EasyOCR |
+| Pemrosesan gambar | OpenCV (`opencv-contrib-python`) |
+| OCR — utama | EasyOCR |
 | OCR — fallback | Tesseract / pytesseract |
 | Deep learning | PyTorch ≥ 2.0 |
 | Assignment solver | `lap` (Hungarian algorithm) |
 
-## Setup
+## Instalasi
 
-### 1. Clone and create a virtual environment
+### 1. Clone dan buat virtual environment
 
 ```bash
 git clone https://github.com/mhmmd-naufl/OCR_BIBNumber.git
@@ -55,109 +55,109 @@ source venv/bin/activate
 
 ### 2. Install PyTorch
 
-Install PyTorch first from [pytorch.org](https://pytorch.org) — choose CPU or the CUDA version that matches your GPU.
+Install PyTorch terlebih dahulu dari [pytorch.org](https://pytorch.org) — pilih versi CPU atau CUDA sesuai GPU kamu.
 
 ```bash
-# CPU example
+# Contoh CPU
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 ```
 
-### 3. Install remaining dependencies
+### 3. Install dependency lainnya
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Install Tesseract (optional but recommended)
+### 4. Install Tesseract (opsional tapi direkomendasikan)
 
-Tesseract is used as the OCR fallback and improves ensemble accuracy.
+Tesseract digunakan sebagai fallback OCR dan meningkatkan akurasi ensemble.
 
-| OS | Command |
+| OS | Cara Install |
 |---|---|
-| Windows | Download from [UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki), install to default path |
+| Windows | Download dari [UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki), install ke path default |
 | Linux | `sudo apt install tesseract-ocr` |
 | macOS | `brew install tesseract` |
 
-EasyOCR downloads its model (~100 MB) automatically on first run.
+EasyOCR mengunduh modelnya (~100 MB) secara otomatis saat pertama kali dijalankan.
 
-### 5. Add your video
+### 5. Siapkan video
 
-Place your video at `videos/video_input.mp4`, or change `VIDEO_RELATIVE` in `ocr/config.py`.
+Letakkan video di `videos/video_input.mp4`, atau ubah `VIDEO_RELATIVE` di `ocr/config.py`.
 
-## Usage
+## Penggunaan
 
 ```bash
 python run.py
 ```
 
-Press **`q`** to stop. `ocr_bib.py` is an alias that calls the same entry point.
+Tekan **`q`** untuk berhenti. `ocr_bib.py` adalah alias yang memanggil entry point yang sama.
 
-### Analyzing results
+### Analisis hasil
 
 ```bash
-# Full summary
+# Ringkasan lengkap
 python analyze_csv.py --all
 
-# Per-track breakdown
+# Breakdown per track
 python analyze_csv.py --per-track
 
-# High-confidence captures only
+# Hanya high-confidence captures
 python analyze_csv.py --captures
 
-# Export filtered rows
+# Export hasil terfilter
 python analyze_csv.py --captures --export captures.csv
 ```
 
 ## Output
 
-`tracking_results.csv` is written during the run (append mode — safe to interrupt).
+`tracking_results.csv` ditulis selama pipeline berjalan (mode append — aman jika dihentikan di tengah jalan).
 
-| Column | Description |
+| Kolom | Keterangan |
 |---|---|
-| `frame_index` | Frame number in the video |
-| `timestamp` | Seconds since video start |
-| `track_id` | Unique ID assigned by ByteTrack |
-| `bib_number` | Aggregated bib read (empty if none yet) |
-| `bbox_x1/y1/x2/y2` | Person bounding box pixels |
-| `bbox_confidence` | YOLO detection confidence (0–1) |
-| `ocr_confidence` | Real OCR confidence from EasyOCR (0–1) |
-| `occlusion_flag` | `1` if `bbox_confidence ≤ 0.6` |
-| `capture_flag` | `1` if `ocr_confidence ≥ 0.7` |
+| `frame_index` | Nomor frame dalam video |
+| `timestamp` | Detik sejak video dimulai |
+| `track_id` | ID unik yang diberikan ByteTrack |
+| `bib_number` | Nomor BIB hasil agregasi (kosong jika belum terbaca) |
+| `bbox_x1/y1/x2/y2` | Koordinat bounding box orang (piksel) |
+| `bbox_confidence` | Confidence deteksi YOLO (0–1) |
+| `ocr_confidence` | Confidence OCR asli dari EasyOCR (0–1) |
+| `occlusion_flag` | `1` jika `bbox_confidence ≤ 0.6` (kemungkinan tertutup) |
+| `capture_flag` | `1` jika `ocr_confidence ≥ 0.7` (pembacaan berkualitas baik) |
 
-## Configuration
+## Konfigurasi
 
-All parameters live in `ocr/config.py`. Nothing else needs editing for most use cases.
+Semua parameter ada di `ocr/config.py`. Untuk sebagian besar kasus, hanya file ini yang perlu diedit.
 
 ```python
-# Paths
+# Path
 VIDEO_RELATIVE = "videos/video_input.mp4"
-YOLO_MODEL     = "yolov8n.pt"      # swap to yolov8s/m for more accuracy
+YOLO_MODEL     = "yolov8n.pt"      # ganti ke yolov8s/m untuk akurasi lebih tinggi
 
-# Performance
-SKIP_FRAMES       = 1              # run YOLO every N frames
-SKIP_OCR_FRAMES   = 3              # run OCR every N frames
-DISPLAY_SCALE     = 0.75           # resize display window
-USE_GPU           = False          # True if CUDA is available
-PREPROCESS_USE_NLMEANS = True      # False = faster, slightly less clean
+# Performa
+SKIP_FRAMES            = 1         # jalankan YOLO setiap N frame
+SKIP_OCR_FRAMES        = 3         # jalankan OCR setiap N frame
+DISPLAY_SCALE          = 0.75      # perkecil jendela tampilan
+USE_GPU                = False     # True jika CUDA tersedia
+PREPROCESS_USE_NLMEANS = True      # False = lebih cepat, sedikit kurang bersih
 
 # Tracking
-TRACKER_MAX_AGE    = 30            # frames to keep a lost track alive
+TRACKER_MAX_AGE    = 30            # frame sebelum track yang hilang dihapus
 TRACKER_IOU_THRESH = 0.3
 
 # OCR
-OCR_BUFFER_SIZE                   = 10
-OCR_MIN_DIGITS                    = 2
-OCR_USE_ENSEMBLE                  = True
-OCR_EASYOCR_CONFIDENCE_THRESHOLD  = 0.3
+OCR_BUFFER_SIZE                  = 10
+OCR_MIN_DIGITS                   = 2
+OCR_USE_ENSEMBLE                 = True
+OCR_EASYOCR_CONFIDENCE_THRESHOLD = 0.3
 
-# Logging thresholds
+# Threshold logging
 BBOX_CONF_THRESHOLD_OCCLUSION = 0.6
 OCR_CONF_THRESHOLD_CAPTURE    = 0.7
 ```
 
-### Common tuning scenarios
+### Skenario tuning umum
 
-**Low-end CPU / high-FPS video**
+**CPU rendah / video FPS tinggi**
 ```python
 SKIP_FRAMES            = 2
 SKIP_OCR_FRAMES        = 5
@@ -165,49 +165,49 @@ DISPLAY_SCALE          = 0.5
 PREPROCESS_USE_NLMEANS = False
 ```
 
-**Maximum OCR accuracy**
+**Akurasi OCR maksimal**
 ```python
 SKIP_OCR_FRAMES                  = 1
 OCR_BUFFER_SIZE                  = 20
 OCR_EASYOCR_CONFIDENCE_THRESHOLD = 0.2
 ```
 
-**GPU available**
+**GPU tersedia**
 ```python
 USE_GPU = True
 ```
 
-## Project structure
+## Struktur Project
 
 ```
 OCR_BIBNumber/
 ├── ocr/
-│   ├── config.py          # all tunable parameters
-│   ├── detector.py        # YOLOv8 wrapper
-│   ├── tracker.py         # ByteTrack wrapper (greedy IOU fallback)
-│   ├── preprocess.py      # image enhancement pipeline
-│   ├── ocr_utils.py       # ensemble OCR with real confidence
-│   ├── logging_csv.py     # structured CSV logger
-│   ├── logger.py          # legacy logger (kept for reference)
+│   ├── config.py          # semua parameter yang bisa diatur
+│   ├── detector.py        # wrapper YOLOv8
+│   ├── tracker.py         # wrapper ByteTrack (fallback ke greedy IOU)
+│   ├── preprocess.py      # pipeline peningkatan kualitas gambar
+│   ├── ocr_utils.py       # ensemble OCR dengan real confidence
+│   ├── logging_csv.py     # CSV logger terstruktur
+│   ├── logger.py          # legacy logger (disimpan sebagai referensi)
 │   └── __init__.py
-├── run.py                 # main entry point
-├── ocr_bib.py             # backward-compatible launcher
-├── analyze_csv.py         # post-run CSV analysis tool
-├── prelabel.py            # dataset pre-labeling utility
+├── run.py                 # entry point utama
+├── ocr_bib.py             # launcher backward-compatible
+├── analyze_csv.py         # tool analisis CSV setelah run
+├── prelabel.py            # utilitas pre-labeling dataset
 ├── requirements.txt
-└── videos/                # place input video here (not tracked by git)
+└── videos/                # letakkan video input di sini (tidak dilacak git)
 ```
 
 ## Troubleshooting
 
-**Video not found** — set `VIDEO_RELATIVE` in `ocr/config.py` to the correct path.
+**Video tidak ditemukan** — atur `VIDEO_RELATIVE` di `ocr/config.py` ke path yang benar.
 
-**YOLO model not found** — `yolov8n.pt` downloads automatically on first run (~6 MB). Requires internet access.
+**Model YOLO tidak ditemukan** — `yolov8n.pt` diunduh otomatis saat pertama kali dijalankan (~6 MB). Butuh koneksi internet.
 
-**Low FPS** — increase `SKIP_FRAMES` / `SKIP_OCR_FRAMES`, lower `DISPLAY_SCALE`, set `PREPROCESS_USE_NLMEANS = False`.
+**FPS rendah** — naikkan `SKIP_FRAMES` / `SKIP_OCR_FRAMES`, turunkan `DISPLAY_SCALE`, set `PREPROCESS_USE_NLMEANS = False`.
 
-**Poor OCR accuracy** — lower `OCR_EASYOCR_CONFIDENCE_THRESHOLD` to `0.2`, raise `OCR_BUFFER_SIZE` to `15–20`, confirm the bib is visible and well-lit in the video.
+**Akurasi OCR buruk** — turunkan `OCR_EASYOCR_CONFIDENCE_THRESHOLD` ke `0.2`, naikkan `OCR_BUFFER_SIZE` ke `15–20`, pastikan BIB terlihat jelas dan pencahayaan cukup.
 
-**Tesseract not found** — install it (see Setup step 4) or ignore; the pipeline falls back to EasyOCR only.
+**Tesseract tidak ditemukan** — install sesuai panduan di atas, atau abaikan; pipeline otomatis fallback ke EasyOCR saja.
 
-**`lap` install fails** — ByteTrack requires `lap` for the Hungarian solver. If the build fails, the tracker automatically falls back to greedy IOU; install a C++ build toolchain or use a pre-built wheel.
+**Install `lap` gagal** — ByteTrack membutuhkan `lap` untuk Hungarian solver. Jika build gagal, tracker otomatis fallback ke greedy IOU; install C++ build toolchain atau gunakan pre-built wheel.
