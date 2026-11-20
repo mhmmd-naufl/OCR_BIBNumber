@@ -23,7 +23,9 @@ def preprocess_for_ocr(patch):
     gray = cv2.resize(gray, (max(32, w * scale), max(32, h * scale)), interpolation=cv2.INTER_CUBIC)
 
     # Aggressive denoise: Non-Local Means (removes noise while preserving edges)
-    gray = cv2.fastNlMeansDenoising(gray, h=config.PREPROCESS_DENOISE_H, templateWindowSize=7, searchWindowSize=21)
+    # Controlled by config.PREPROCESS_USE_NLMEANS — disable for faster CPU performance
+    if config.PREPROCESS_USE_NLMEANS:
+        gray = cv2.fastNlMeansDenoising(gray, h=config.PREPROCESS_DENOISE_H, templateWindowSize=7, searchWindowSize=21)
 
     # CLAHE (Contrast Limited Adaptive Histogram Equalization) with higher clip limit
     clahe = cv2.createCLAHE(clipLimit=config.PREPROCESS_CLAHE_CLIP, tileGridSize=(8, 8))

@@ -9,11 +9,12 @@ an informative error. Keeping the wrapper makes it easy to swap to OpenCV DNN la
 """
 
 from typing import List, Tuple
+from ocr import config
 
 _model = None
 
 def load_model(path: str):
-    """Lazy-load the YOLO model (ultralytics)."""
+    """Lazy-load the YOLO model (ultralytics). Respects config.USE_GPU."""
     global _model
     if _model is None:
         try:
@@ -21,6 +22,12 @@ def load_model(path: str):
         except Exception as e:
             raise RuntimeError("Ultralytics YOLO not installed. Install with: pip install ultralytics") from e
         _model = YOLO(path)
+        # Move model to GPU if configured
+        if config.USE_GPU:
+            try:
+                _model.to("cuda")
+            except Exception:
+                print("⚠️  USE_GPU=True but CUDA not available — falling back to CPU.")
     return _model
 
 

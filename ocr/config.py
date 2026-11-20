@@ -34,7 +34,12 @@ TRACKER_IOU_THRESH = 0.3
 SKIP_FRAMES = 1  # process YOLO detection every N frames (1=every frame, 2=every 2nd, etc)
 SKIP_OCR_FRAMES = 3  # run OCR preprocessing every N frames (can be slower; tracker updates every frame)
 DISPLAY_SCALE = 0.75  # scale down display for faster rendering (0.75 = 75% size)
-USE_GPU = False  # set True if you have CUDA GPU; slightly faster but requires GPU memory
+USE_GPU = False  # set True if you have CUDA GPU — used by EasyOCR and YOLO
+
+# Preprocessing performance vs accuracy trade-off
+# fastNlMeansDenoising is very slow on 4× upscaled images (~100–200ms per patch on CPU).
+# Set False to skip it and rely on CLAHE + bilateral only (much faster, slight accuracy drop).
+PREPROCESS_USE_NLMEANS = True
 
 # Display colors (BGR format)
 COLOR_PERSON = (255, 0, 0)        # blue for person bbox

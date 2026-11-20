@@ -18,6 +18,11 @@ numpy>=1.23.0
 # Object Detection (YOLOv8)
 ultralytics>=8.0.0
 
+# Tracking — ByteTrack (Hungarian algorithm solver)
+# lap provides the linear assignment solver used by BYTETracker inside ultralytics.
+# If lap fails to build on your system, the tracker auto-falls back to greedy IOU.
+lap>=0.4.0
+
 # OCR Engines
 easyocr>=1.6.0
 pytesseract>=0.3.10
