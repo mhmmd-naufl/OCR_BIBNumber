@@ -51,13 +51,6 @@ Frame video
 - PyTorch CPU build + ultralytics + easyocr berat RAM-nya; 8 GB tidak disarankan.
 - GPU NVIDIA (4 GB+) bikin proses 5–10× lebih cepat; set `USE_GPU = True` di `config.py`.
 
-**Rekomendasi laptop untuk proyek ini:**
-| Tier | Contoh | Estimasi |
-|---|---|---|
-| Budget | i5-12450H + 16 GB (tanpa GPU) | Rp 7–9 jt |
-| Sweet spot | i5-13500H + 16 GB + RTX 3060 6 GB | Rp 12–15 jt |
-| Nyaman | i7-13700H + 32 GB + RTX 4060 8 GB | Rp 18–25 jt |
-
 ## Instalasi
 
 ### 1. Clone dan buat virtual environment
