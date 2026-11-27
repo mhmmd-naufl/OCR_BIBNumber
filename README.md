@@ -36,6 +36,28 @@ Frame video
 | Deep learning | PyTorch ≥ 2.0 |
 | Assignment solver | `lap` (Hungarian algorithm) |
 
+## System Requirements
+
+| Komponen | Minimum (CPU-only) | Nyaman |
+|---|---|---|
+| **CPU** | 4 core, 2.4 GHz+ (i5 8th gen / Ryzen 5 3500) | 6–8 core, 3.0 GHz+ |
+| **RAM** | 16 GB | 32 GB |
+| **Storage** | 20 GB free (SSD) | NVMe SSD |
+| **GPU** | Nggak wajib | NVIDIA 4 GB VRAM+ (RTX 3060 / GTX 1660) |
+| **Python** | 3.10+ | 3.10+ |
+
+**Catatan:**
+- `USE_GPU = False` default di `ocr/config.py` — CPU-only bisa jalan, tapi YOLOv8 + EasyOCR lambat (1–5× real-time di laptop low-spec).
+- PyTorch CPU build + ultralytics + easyocr berat RAM-nya; 8 GB tidak disarankan.
+- GPU NVIDIA (4 GB+) bikin proses 5–10× lebih cepat; set `USE_GPU = True` di `config.py`.
+
+**Rekomendasi laptop untuk proyek ini:**
+| Tier | Contoh | Estimasi |
+|---|---|---|
+| Budget | i5-12450H + 16 GB (tanpa GPU) | Rp 7–9 jt |
+| Sweet spot | i5-13500H + 16 GB + RTX 3060 6 GB | Rp 12–15 jt |
+| Nyaman | i7-13700H + 32 GB + RTX 4060 8 GB | Rp 18–25 jt |
+
 ## Instalasi
 
 ### 1. Clone dan buat virtual environment
